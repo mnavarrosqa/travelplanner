@@ -1,0 +1,33 @@
+# Travel Planner .htaccess
+
+# Enable error reporting (disable in production)
+# php_flag display_errors On
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive files (install.php allowed for initial setup - remove after installation)
+# Using Apache 2.4 syntax
+<FilesMatch "^(config|includes|database\.sql)">
+    Require all denied
+</FilesMatch>
+
+# Set default charset
+AddDefaultCharset UTF-8
+
+# Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript
+</IfModule>
+
+# Browser caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
