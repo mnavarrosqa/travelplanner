@@ -75,7 +75,7 @@ if ($format === 'csv') {
     
     // Travel items
     fputcsv($output, ['Travel Items']);
-    fputcsv($output, ['Type', 'Title', 'Start Date/Time', 'End Date/Time', 'Location', 'Confirmation', 'Cost', 'Currency', 'Description']);
+    fputcsv($output, ['Type', 'Title', 'Start Date/Time', 'End Date/Time', 'Location', 'Confirmation', 'Description', 'Notes']);
     
     foreach ($items as $item) {
         fputcsv($output, [
@@ -85,9 +85,8 @@ if ($format === 'csv') {
             $item['end_datetime'] ?: '',
             $item['location'] ?: '',
             $item['confirmation_number'] ?: '',
-            $item['cost'] ?: '',
-            $item['currency'] ?: '',
-            str_replace(["\r\n", "\r", "\n"], ' ', $item['description'] ?: '') // Remove newlines for CSV
+            str_replace(["\r\n", "\r", "\n"], ' ', $item['description'] ?: ''), // Remove newlines for CSV
+            str_replace(["\r\n", "\r", "\n"], ' ', $item['notes'] ?? '') // Remove newlines for CSV
         ]);
     }
     
@@ -157,7 +156,7 @@ if ($format === 'csv') {
                     <th>End</th>
                     <th>Location</th>
                     <th>Confirmation</th>
-                    <th>Cost</th>
+                    <th>Notes</th>
                 </tr>
             </thead>
             <tbody>
@@ -169,7 +168,7 @@ if ($format === 'csv') {
                     <td><?php echo $item['end_datetime'] ? date(DATETIME_FORMAT, strtotime($item['end_datetime'])) : ''; ?></td>
                     <td><?php echo htmlspecialchars($item['location'] ?: ''); ?></td>
                     <td><?php echo htmlspecialchars($item['confirmation_number'] ?: ''); ?></td>
-                    <td><?php echo $item['cost'] ? number_format($item['cost'], 2) . ' ' . $item['currency'] : ''; ?></td>
+                    <td><?php echo nl2br(htmlspecialchars($item['notes'] ?? '')); ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>

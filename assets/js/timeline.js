@@ -64,7 +64,8 @@ function initSwipeGestures() {
 function optimizeTimelineForMobile() {
     if (window.innerWidth <= 768) {
         // Collapse timeline items on mobile with expand/collapse
-        const timelineItems = document.querySelectorAll('.timeline-item');
+        // Note: Using .timeline-item-wrapper to match actual HTML structure
+        const timelineItems = document.querySelectorAll('.timeline-item-wrapper');
         
         timelineItems.forEach(item => {
             const details = item.querySelectorAll('.timeline-details');

@@ -7,7 +7,8 @@ require_once __DIR__ . '/../includes/auth.php';
 
 logoutUser();
 
-header('Location: /travelplanner/pages/login.php');
+$basePath = getBasePath();
+header('Location: ' . $basePath . '/pages/login.php');
 exit;
 ?>
 

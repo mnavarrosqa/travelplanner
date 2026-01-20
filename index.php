@@ -5,9 +5,11 @@
 require_once 'includes/auth.php';
 
 if (isLoggedIn()) {
-    header('Location: /travelplanner/pages/dashboard.php');
+    $basePath = getBasePath();
+    header('Location: ' . $basePath . '/pages/dashboard.php');
 } else {
-    header('Location: /travelplanner/pages/login.php');
+    $basePath = getBasePath();
+    header('Location: ' . $basePath . '/pages/login.php');
 }
 exit;
 ?>

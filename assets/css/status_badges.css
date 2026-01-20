@@ -1,0 +1,38 @@
+/* Trip Status Badges */
+.trip-badge-status {
+    text-transform: capitalize;
+}
+
+.trip-badge-status-active {
+    background: rgba(80, 200, 120, 0.15);
+    color: #2E7D32;
+}
+
+.trip-badge-status-completed {
+    background: rgba(74, 144, 226, 0.15);
+    color: #1565C0;
+}
+
+.trip-badge-status-archived {
+    background: rgba(158, 158, 158, 0.15);
+    color: #616161;
+}
+
+.trip-header-badge-status {
+    text-transform: capitalize;
+}
+
+.trip-header-badge-status-active {
+    background: rgba(80, 200, 120, 0.15);
+    color: #2E7D32;
+}
+
+.trip-header-badge-status-completed {
+    background: rgba(74, 144, 226, 0.15);
+    color: #1565C0;
+}
+
+.trip-header-badge-status-archived {
+    background: rgba(158, 158, 158, 0.15);
+    color: #616161;
+}

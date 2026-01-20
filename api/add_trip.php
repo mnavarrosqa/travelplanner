@@ -19,6 +19,10 @@ $title = trim($_POST['title'] ?? '');
 $startDate = $_POST['start_date'] ?? '';
 $endDate = $_POST['end_date'] ?? null;
 $description = $_POST['description'] ?? null;
+$travelType = $_POST['travel_type'] ?? null;
+$isMultipleDestinations = isset($_POST['is_multiple_destinations']) ? (int)$_POST['is_multiple_destinations'] : 0;
+$destinations = $_POST['destinations'] ?? null;
+$status = $_POST['status'] ?? 'active';
 
 // Validation
 if (empty($title) || empty($startDate)) {
@@ -53,11 +57,49 @@ if ($endDate) {
 try {
     $conn = getDBConnection();
     
+    // Validate and parse destinations
+    $destinationsJson = null;
+    if ($destinations) {
+        $destinationsArray = json_decode($destinations, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($destinationsArray)) {
+            // Filter out empty destinations
+            $destinationsArray = array_filter($destinationsArray, function($dest) {
+                return !empty($dest['name']);
+            });
+            if (!empty($destinationsArray)) {
+                $destinationsJson = json_encode(array_values($destinationsArray));
+            }
+        }
+    }
+    
+    // Validate travel type
+    $validTravelTypes = ['vacations', 'work', 'business', 'family', 'leisure', 'adventure', 'romantic', 'other'];
+    if ($travelType && !in_array($travelType, $validTravelTypes)) {
+        $travelType = null;
+    }
+    
+    // Validate status
+    $validStatuses = ['active', 'completed', 'archived'];
+    if (!in_array($status, $validStatuses)) {
+        $status = 'active';
+    }
+    
     $stmt = $conn->prepare("
-        INSERT INTO trips (user_id, title, start_date, end_date, description, created_by) 
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO trips (user_id, title, start_date, end_date, description, travel_type, is_multiple_destinations, destinations, status, created_by) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$userId, $title, $startDate, $endDate ?: null, $description ?: null, $userId]);
+    $stmt->execute([
+        $userId, 
+        $title, 
+        $startDate, 
+        $endDate ?: null, 
+        $description ?: null,
+        $travelType ?: null,
+        $isMultipleDestinations,
+        $destinationsJson,
+        $status,
+        $userId
+    ]);
     
     $tripId = $conn->lastInsertId();
     

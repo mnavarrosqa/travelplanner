@@ -23,9 +23,13 @@ CREATE TABLE trips (
     start_date DATE NOT NULL,
     end_date DATE,
     description TEXT,
+    created_by INT,
+    modified_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (modified_by) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_user_id (user_id),
     INDEX idx_start_date (start_date),
     INDEX idx_user_dates (user_id, start_date)
@@ -44,9 +48,13 @@ CREATE TABLE travel_items (
     confirmation_number VARCHAR(100),
     cost DECIMAL(10,2),
     currency VARCHAR(3) DEFAULT 'USD',
+    created_by INT,
+    modified_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (modified_by) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_trip_id (trip_id),
     INDEX idx_start_datetime (start_datetime),
     INDEX idx_trip_datetime (trip_id, start_datetime),
@@ -105,17 +113,6 @@ CREATE TABLE invitations (
     INDEX idx_trip_id (trip_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Add created_by and modified_by to trips
-ALTER TABLE trips 
-ADD COLUMN created_by INT,
-ADD COLUMN modified_by INT,
-ADD FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-ADD FOREIGN KEY (modified_by) REFERENCES users(id) ON DELETE SET NULL;
-
--- Add created_by and modified_by to travel_items
-ALTER TABLE travel_items 
-ADD COLUMN created_by INT,
-ADD COLUMN modified_by INT,
-ADD FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-ADD FOREIGN KEY (modified_by) REFERENCES users(id) ON DELETE SET NULL;
+-- Note: created_by and modified_by columns are now included in the CREATE TABLE statements above
+-- For existing databases missing these columns, run the migration in database_collaboration.sql
 

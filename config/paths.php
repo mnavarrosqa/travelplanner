@@ -4,31 +4,8 @@
  * Dynamic base path detection
  */
 
-// Get base path dynamically
-function getBasePath() {
-    $scriptName = $_SERVER['SCRIPT_NAME'];
-    $scriptDir = dirname($scriptName);
-    
-    // Remove /pages, /api, /config, etc. to get base
-    $basePath = str_replace(['/pages', '/api', '/config', '/includes'], '', $scriptDir);
-    
-    // If we're at root, return empty string
-    if ($basePath === '/' || $basePath === '\\') {
-        return '';
-    }
-    
-    // Ensure it starts with /
-    if (substr($basePath, 0, 1) !== '/') {
-        $basePath = '/' . $basePath;
-    }
-    
-    // Remove trailing slash
-    $basePath = rtrim($basePath, '/');
-    
-    return $basePath;
-}
-
 // Define base path constant
+// Note: getBasePath() function is defined in includes/auth.php to avoid conflicts
 if (!defined('BASE_PATH')) {
     // Try to detect from common patterns
     $requestUri = $_SERVER['REQUEST_URI'] ?? '';

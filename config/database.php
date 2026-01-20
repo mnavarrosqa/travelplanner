@@ -7,7 +7,7 @@
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'travelplanner');
+define('DB_NAME', 'tplanner');
 
 /**
  * Get database connection

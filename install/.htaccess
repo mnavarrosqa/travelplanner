@@ -1,0 +1,9 @@
+# Allow access to installer
+# Remove or rename this file after installation for security
+
+# Optional: Restrict access by IP (uncomment and add your IP)
+# <RequireAll>
+#     Require ip 127.0.0.1
+#     Require ip ::1
+#     # Add your IP here
+# </RequireAll>
