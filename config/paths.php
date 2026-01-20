@@ -8,22 +8,26 @@
 // Note: getBasePath() function is defined in includes/auth.php to avoid conflicts
 if (!defined('BASE_PATH')) {
     // Try to detect from common patterns
-    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
-    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    $requestUri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+    $scriptName = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
     
-    // Extract base path from script name
-    $basePath = dirname($scriptName);
+    // Simple detection: check REQUEST_URI for subdirectory
+    // This is more reliable than script name for subdomain installations
+    $basePath = '';
     
-    // If script is in subdirectory, use that
-    if (strpos($basePath, '/travelplanner') !== false) {
-        $basePath = '/travelplanner';
-    } else {
-        // Fallback: try to detect from REQUEST_URI
-        if (preg_match('#(/[^/]+)/#', $requestUri, $matches)) {
-            $basePath = $matches[1];
+    if (preg_match('#^/([^/]+)/#', $requestUri, $matches)) {
+        // Check if this is a known subdirectory (pages, api, etc.)
+        $firstDir = $matches[1];
+        if (!in_array($firstDir, ['pages', 'api', 'config', 'includes', 'install', 'assets', 'uploads'])) {
+            // It's a base path subdirectory (e.g., /travel)
+            $basePath = '/' . $firstDir;
         } else {
+            // We're at root (first dir is a known app directory)
             $basePath = '';
         }
+    } else {
+        // No subdirectory in URI, we're at root
+        $basePath = '';
     }
     
     define('BASE_PATH', $basePath);
@@ -34,7 +38,7 @@ if (!defined('BASE_PATH')) {
  */
 function url($path = '') {
     $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
     $base = BASE_PATH;
     
     // Remove leading slash from path if base has it

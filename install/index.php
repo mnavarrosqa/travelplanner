@@ -10,32 +10,39 @@ $installed = false;
 if (file_exists($configFile)) {
     $configContent = file_get_contents($configFile);
     // Check if database is configured (not default empty values)
-    if (strpos($configContent, "DB_PASS', ''") === false && 
-        strpos($configContent, "DB_NAME', 'travelplanner'") !== false) {
-        $installed = true;
+    // Verify all required constants are set and not empty
+    if (strpos($configContent, "define('DB_HOST'") !== false && 
+        strpos($configContent, "define('DB_USER'") !== false && 
+        strpos($configContent, "define('DB_NAME'") !== false) {
+        // Verify it's not just empty placeholders
+        if (strpos($configContent, "DB_HOST', ''") === false && 
+            strpos($configContent, "DB_USER', ''") === false && 
+            strpos($configContent, "DB_NAME', ''") === false) {
+            $installed = true;
+        }
     }
 }
 
-$step = $_GET['step'] ?? '1';
+$step = isset($_GET['step']) ? $_GET['step'] : '1';
 $errors = [];
 $success = false;
 $warnings = [];
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $dbHost = trim($_POST['db_host'] ?? 'localhost');
-    $dbUser = trim($_POST['db_user'] ?? 'root');
-    $dbPass = $_POST['db_pass'] ?? '';
-    $dbName = trim($_POST['db_name'] ?? 'travelplanner');
+    $dbHost = trim(isset($_POST['db_host']) ? $_POST['db_host'] : '');
+    $dbUser = trim(isset($_POST['db_user']) ? $_POST['db_user'] : '');
+    $dbPass = isset($_POST['db_pass']) ? $_POST['db_pass'] : '';
+    $dbName = trim(isset($_POST['db_name']) ? $_POST['db_name'] : '');
     
-    $adminEmail = trim($_POST['admin_email'] ?? '');
-    $adminPassword = $_POST['admin_password'] ?? '';
-    $adminFirstName = trim($_POST['admin_first_name'] ?? '');
-    $adminLastName = trim($_POST['admin_last_name'] ?? '');
+    $adminEmail = trim(isset($_POST['admin_email']) ? $_POST['admin_email'] : '');
+    $adminPassword = isset($_POST['admin_password']) ? $_POST['admin_password'] : '';
+    $adminFirstName = trim(isset($_POST['admin_first_name']) ? $_POST['admin_first_name'] : '');
+    $adminLastName = trim(isset($_POST['admin_last_name']) ? $_POST['admin_last_name'] : '');
     
     // API Keys (optional)
-    $aerodataboxKey = trim($_POST['aerodatabox_api_key'] ?? '');
-    $aviationStackKey = trim($_POST['aviationstack_api_key'] ?? '');
+    $aerodataboxKey = trim(isset($_POST['aerodatabox_api_key']) ? $_POST['aerodatabox_api_key'] : '');
+    $aviationStackKey = trim(isset($_POST['aviationstack_api_key']) ? $_POST['aviationstack_api_key'] : '');
     
     // Validation
     if (empty($dbHost)) {
@@ -622,25 +629,25 @@ PHP;
                 
                 <div class="form-group">
                     <label for="db_host">Database Host *</label>
-                    <input type="text" id="db_host" name="db_host" value="<?php echo htmlspecialchars($_POST['db_host'] ?? 'localhost'); ?>" required>
-                    <div class="help-text">Usually 'localhost' for local development</div>
+                    <input type="text" id="db_host" name="db_host" value="<?php echo htmlspecialchars(isset($_POST['db_host']) ? $_POST['db_host'] : ''); ?>" placeholder="localhost" required>
+                    <div class="help-text">Usually 'localhost' for local development, or your database server hostname</div>
                 </div>
                 
                 <div class="form-group">
                     <label for="db_user">Database Username *</label>
-                    <input type="text" id="db_user" name="db_user" value="<?php echo htmlspecialchars($_POST['db_user'] ?? 'root'); ?>" required>
-                    <div class="help-text">Default XAMPP username is 'root'</div>
+                    <input type="text" id="db_user" name="db_user" value="<?php echo htmlspecialchars(isset($_POST['db_user']) ? $_POST['db_user'] : ''); ?>" placeholder="Enter database username" required>
+                    <div class="help-text">Your MySQL/MariaDB username</div>
                 </div>
                 
                 <div class="form-group">
                     <label for="db_pass">Database Password</label>
-                    <input type="password" id="db_pass" name="db_pass" value="<?php echo htmlspecialchars($_POST['db_pass'] ?? ''); ?>">
-                    <div class="help-text">Leave empty if no password is set (default XAMPP)</div>
+                    <input type="password" id="db_pass" name="db_pass" value="<?php echo htmlspecialchars(isset($_POST['db_pass']) ? $_POST['db_pass'] : ''); ?>" placeholder="Enter database password">
+                    <div class="help-text">Leave empty if no password is set for your database user</div>
                 </div>
                 
                 <div class="form-group">
                     <label for="db_name">Database Name *</label>
-                    <input type="text" id="db_name" name="db_name" value="<?php echo htmlspecialchars($_POST['db_name'] ?? 'travelplanner'); ?>" required>
+                    <input type="text" id="db_name" name="db_name" value="<?php echo htmlspecialchars(isset($_POST['db_name']) ? $_POST['db_name'] : ''); ?>" placeholder="travelplanner" required>
                     <div class="help-text">Database will be created if it doesn't exist</div>
                 </div>
                 
@@ -656,7 +663,7 @@ PHP;
                 
                 <div class="form-group">
                     <label for="admin_email">Admin Email</label>
-                    <input type="email" id="admin_email" name="admin_email" value="<?php echo htmlspecialchars($_POST['admin_email'] ?? ''); ?>">
+                    <input type="email" id="admin_email" name="admin_email" value="<?php echo htmlspecialchars(isset($_POST['admin_email']) ? $_POST['admin_email'] : ''); ?>">
                 </div>
                 
                 <div class="form-group">
@@ -667,12 +674,12 @@ PHP;
                 
                 <div class="form-group">
                     <label for="admin_first_name">First Name</label>
-                    <input type="text" id="admin_first_name" name="admin_first_name" value="<?php echo htmlspecialchars($_POST['admin_first_name'] ?? ''); ?>">
+                    <input type="text" id="admin_first_name" name="admin_first_name" value="<?php echo htmlspecialchars(isset($_POST['admin_first_name']) ? $_POST['admin_first_name'] : ''); ?>">
                 </div>
                 
                 <div class="form-group">
                     <label for="admin_last_name">Last Name</label>
-                    <input type="text" id="admin_last_name" name="admin_last_name" value="<?php echo htmlspecialchars($_POST['admin_last_name'] ?? ''); ?>">
+                    <input type="text" id="admin_last_name" name="admin_last_name" value="<?php echo htmlspecialchars(isset($_POST['admin_last_name']) ? $_POST['admin_last_name'] : ''); ?>">
                 </div>
                 
                 <div class="divider"></div>
@@ -687,7 +694,7 @@ PHP;
                 
                 <div class="form-group">
                     <label for="aerodatabox_api_key">AeroDataBox API Key</label>
-                    <input type="text" id="aerodatabox_api_key" name="aerodatabox_api_key" value="<?php echo htmlspecialchars($_POST['aerodatabox_api_key'] ?? ''); ?>" placeholder="Your RapidAPI key">
+                    <input type="text" id="aerodatabox_api_key" name="aerodatabox_api_key" value="<?php echo htmlspecialchars(isset($_POST['aerodatabox_api_key']) ? $_POST['aerodatabox_api_key'] : ''); ?>" placeholder="Your RapidAPI key">
                     <div class="help-text">
                         Get free API key from <a href="https://rapidapi.com/aerodatabox/api/aerodatabox/" target="_blank" style="color: #4A90E2;">RapidAPI</a> 
                         (300-600 requests/month free, supports scheduled flights)
@@ -696,7 +703,7 @@ PHP;
                 
                 <div class="form-group">
                     <label for="aviationstack_api_key">AviationStack API Key</label>
-                    <input type="text" id="aviationstack_api_key" name="aviationstack_api_key" value="<?php echo htmlspecialchars($_POST['aviationstack_api_key'] ?? ''); ?>" placeholder="Your AviationStack key">
+                    <input type="text" id="aviationstack_api_key" name="aviationstack_api_key" value="<?php echo htmlspecialchars(isset($_POST['aviationstack_api_key']) ? $_POST['aviationstack_api_key'] : ''); ?>" placeholder="Your AviationStack key">
                     <div class="help-text">
                         Get free API key from <a href="https://aviationstack.com/" target="_blank" style="color: #4A90E2;">AviationStack</a> 
                         (100 requests/month free, real-time flights only)

@@ -103,7 +103,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($trip['title']); ?> - Shared Trip</title>
-    <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo (defined('BASE_PATH') && BASE_PATH ? BASE_PATH . '/' : '/'); ?>assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .public-trip-header {
@@ -294,6 +294,6 @@ try {
         <?php endif; ?>
     </div>
     
-    <script src="<?php echo BASE_PATH; ?>/assets/js/main.js"></script>
+    <script src="<?php echo (defined('BASE_PATH') && BASE_PATH ? BASE_PATH . '/' : '/'); ?>assets/js/main.js"></script>
 </body>
 </html>

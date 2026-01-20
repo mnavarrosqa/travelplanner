@@ -23,42 +23,52 @@
     </button>
     
     <?php
-    // Get base path dynamically from script location (reuse from header if set)
+    // Ensure paths.php is loaded first
+    if (!defined('BASE_PATH')) {
+        $pathsFile = __DIR__ . '/../config/paths.php';
+        if (file_exists($pathsFile)) {
+            require_once $pathsFile;
+        }
+    }
+    
+    // Get base path dynamically - use BASE_PATH constant if available, otherwise detect
     if (!isset($basePath)) {
-        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-        $scriptDir = dirname($scriptName);
-        
-        // Remove subdirectories to get base path
-        $basePath = $scriptDir;
-        $basePath = str_replace(['/pages', '/api', '/config', '/includes', '/install'], '', $basePath);
-        
-        // Normalize path separators (Windows to Unix)
-        $basePath = str_replace('\\', '/', $basePath);
-        
-        // Clean up: ensure starts with /, remove trailing slash, remove double slashes
-        $basePath = '/' . ltrim($basePath, '/');
-        $basePath = rtrim($basePath, '/');
-        $basePath = preg_replace('#/+#', '/', $basePath);
-        
-        // If still empty or just root, default to /travelplanner or detect from REQUEST_URI
-        if (empty($basePath) || $basePath === '/') {
-            $requestUri = $_SERVER['REQUEST_URI'] ?? '';
-            // Extract base path from request URI (e.g., /travelplanner/pages/dashboard.php -> /travelplanner)
-            if (preg_match('#^/([^/]+)#', $requestUri, $matches)) {
-                $basePath = '/' . $matches[1];
+        if (defined('BASE_PATH')) {
+            $basePath = BASE_PATH;
+        } else {
+            // Simple detection: check REQUEST_URI for subdirectory
+            $requestUri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+            
+            if (preg_match('#^/([^/]+)/#', $requestUri, $matches)) {
+                // Check if this is a known subdirectory (pages, api, etc.)
+                $firstDir = $matches[1];
+                if (!in_array($firstDir, ['pages', 'api', 'config', 'includes', 'install', 'assets', 'uploads'])) {
+                    // It's a base path subdirectory
+                    $basePath = '/' . $firstDir;
+                } else {
+                    // We're at root
+                    $basePath = '';
+                }
             } else {
-                $basePath = '/travelplanner'; // Default fallback
+                // No subdirectory in URI, we're at root
+                $basePath = '';
             }
         }
     }
+    
+    // Ensure basePath is set and normalized
+    if (!isset($basePath)) {
+        $basePath = '';
+    }
+    $basePath = rtrim($basePath, '/');
     ?>
-    <script src="<?php echo htmlspecialchars($basePath); ?>/assets/js/main.js"></script>
+    <script src="<?php echo htmlspecialchars($basePath ? $basePath . '/' : '/'); ?>assets/js/main.js"></script>
     <?php if (isset($pageTitle) && strpos($pageTitle, 'Trip') !== false): ?>
-        <script src="<?php echo htmlspecialchars($basePath); ?>/assets/js/timeline.js"></script>
+        <script src="<?php echo htmlspecialchars($basePath ? $basePath . '/' : '/'); ?>assets/js/timeline.js"></script>
     <?php endif; ?>
     <?php if (isset($extraScripts)): ?>
         <?php foreach ($extraScripts as $script): ?>
-            <script src="<?php echo htmlspecialchars($basePath); ?>/assets/js/<?php echo htmlspecialchars($script); ?>"></script>
+            <script src="<?php echo htmlspecialchars($basePath ? $basePath . '/' : '/'); ?>assets/js/<?php echo htmlspecialchars($script); ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
 </body>

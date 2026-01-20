@@ -256,7 +256,8 @@ if (!isset($trip['share_token'])) {
 }
 
 if (!$trip || !hasTripAccess($tripId, $userId)) {
-    header('Location: dashboard.php');
+    $basePath = defined('BASE_PATH') ? BASE_PATH : getBasePath();
+    header('Location: ' . $basePath . '/pages/dashboard.php');
     exit;
 }
 
