@@ -23,6 +23,7 @@ CREATE TABLE trips (
     start_date DATE NOT NULL,
     end_date DATE,
     description TEXT,
+    cover_image VARCHAR(2048) NULL COMMENT 'Cover image URL for trip header/cards',
     created_by INT,
     modified_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

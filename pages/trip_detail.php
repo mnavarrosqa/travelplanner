@@ -403,6 +403,18 @@ include __DIR__ . '/../includes/header.php';
                 <label class="form-label" for="title">Trip Title *</label>
                 <input type="text" id="title" name="title" class="form-input" required value="<?php echo htmlspecialchars($trip['title']); ?>">
             </div>
+
+            <div class="form-group">
+                <label class="form-label" for="cover_image">Cover Image</label>
+                <input type="file" id="cover_image" name="cover_image" class="form-input" accept="image/*">
+                <span class="form-help">Optional. Upload an image to use as the background in the trip header and trip cards.</span>
+                <?php if (!empty($trip['cover_image'])): ?>
+                    <label style="display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" name="remove_cover_image" value="1">
+                        <span>Remove current cover image</span>
+                    </label>
+                <?php endif; ?>
+            </div>
             
             <div class="form-group">
                 <label class="form-label" for="start_date">Start Date *</label>
@@ -1101,7 +1113,19 @@ include __DIR__ . '/../includes/header.php';
         </form>
     </div>
 <?php else: ?>
-    <div class="trip-header-card">
+    <?php
+    $coverImage = trim($trip['cover_image'] ?? '');
+    $hasCoverImage = $coverImage !== '';
+    $coverImageUrl = '';
+    if ($hasCoverImage) {
+        $basePath = defined('BASE_PATH') ? BASE_PATH : getBasePath();
+        $coverImageUrl = ($basePath ? $basePath : '') . '/' . ltrim($coverImage, '/');
+        if (substr($coverImageUrl, 0, 1) !== '/') {
+            $coverImageUrl = '/' . $coverImageUrl;
+        }
+    }
+    ?>
+    <div class="trip-header-card<?php echo $hasCoverImage ? ' has-cover' : ''; ?>"<?php if ($hasCoverImage): ?> style='--trip-cover-image: url(<?php echo htmlspecialchars(json_encode($coverImageUrl), ENT_QUOTES, 'UTF-8'); ?>);'<?php endif; ?>>
         <div class="trip-actions-dropdown trip-actions-dropdown-header">
             <button type="button" class="trip-actions-toggle" id="tripActionsToggle" aria-label="Trip actions" aria-expanded="false">
                 <i class="fas fa-ellipsis-v"></i>

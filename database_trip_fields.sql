@@ -44,6 +44,19 @@ PREPARE alterIfNotExists FROM @preparedStatement;
 EXECUTE alterIfNotExists;
 DEALLOCATE PREPARE alterIfNotExists;
 
+-- Trip Cover Image (URL)
+SET @preparedStatement = (SELECT IF(
+  (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+   WHERE TABLE_SCHEMA = @dbname 
+   AND TABLE_NAME = @tablename 
+   AND COLUMN_NAME = 'cover_image') > 0,
+  'SELECT 1',
+  'ALTER TABLE trips ADD COLUMN cover_image VARCHAR(2048) NULL COMMENT ''Cover image URL for trip header/cards'''
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
 -- Add index for travel_type for filtering
 SET @preparedStatement = (SELECT IF(
   (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS 

@@ -77,6 +77,7 @@ try {
         'travel_type' => "ALTER TABLE trips ADD COLUMN travel_type VARCHAR(50) NULL COMMENT 'Type of travel: vacations, work, family, business, leisure, etc.'",
         'is_multiple_destinations' => "ALTER TABLE trips ADD COLUMN is_multiple_destinations TINYINT(1) DEFAULT 0 COMMENT 'Whether trip has multiple destinations'",
         'destinations' => "ALTER TABLE trips ADD COLUMN destinations TEXT NULL COMMENT 'JSON array of destination objects'",
+        'cover_image' => "ALTER TABLE trips ADD COLUMN cover_image VARCHAR(2048) NULL COMMENT 'Cover image URL for trip header/cards'",
         'share_token' => "ALTER TABLE trips ADD COLUMN share_token VARCHAR(64) NULL UNIQUE COMMENT 'Unique token for public sharing'",
         'is_publicly_shared' => "ALTER TABLE trips ADD COLUMN is_publicly_shared TINYINT(1) DEFAULT 0 COMMENT 'Whether trip is publicly shared via share link'",
         'created_by' => "ALTER TABLE trips ADD COLUMN created_by INT NULL COMMENT 'User who created the trip'",
@@ -171,6 +172,7 @@ try {
             $optionalColumns = [
                 'end_date' => isset($tripData['end_date']) ? $tripData['end_date'] : null,
                 'description' => isset($tripData['description']) ? $tripData['description'] : null,
+                'cover_image' => isset($tripData['cover_image']) ? $tripData['cover_image'] : null,
                 'travel_type' => isset($tripData['travel_type']) ? $tripData['travel_type'] : null,
                 'is_multiple_destinations' => isset($tripData['is_multiple_destinations']) ? $tripData['is_multiple_destinations'] : 0,
                 'destinations' => isset($tripData['destinations']) ? $tripData['destinations'] : null,

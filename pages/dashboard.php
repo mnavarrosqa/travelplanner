@@ -76,6 +76,12 @@ $action = $_GET['action'] ?? '';
                 <label class="form-label" for="title">Trip Title *</label>
                 <input type="text" id="title" name="title" class="form-input" required placeholder="e.g., Summer Europe 2024">
             </div>
+
+            <div class="form-group">
+                <label class="form-label" for="cover_image">Cover Image</label>
+                <input type="file" id="cover_image" name="cover_image" class="form-input" accept="image/*">
+                <span class="form-help">Optional. Upload an image to use as the background in the trip header and trip cards.</span>
+            </div>
             
             <div class="form-group">
                 <label class="form-label" for="start_date">Start Date *</label>
@@ -230,6 +236,17 @@ $action = $_GET['action'] ?? '';
                 if (!empty($trip['destinations'])) {
                     $destinations = json_decode($trip['destinations'], true) ?: [];
                 }
+
+                $coverImage = trim($trip['cover_image'] ?? '');
+                $hasCoverImage = $coverImage !== '';
+                $coverImageUrl = '';
+                if ($hasCoverImage) {
+                    $basePath = defined('BASE_PATH') ? BASE_PATH : '';
+                    $coverImageUrl = ($basePath ? $basePath : '') . '/' . ltrim($coverImage, '/');
+                    if (substr($coverImageUrl, 0, 1) !== '/') {
+                        $coverImageUrl = '/' . $coverImageUrl;
+                    }
+                }
                 
                 // Calculate duration
                 $duration = '';
@@ -241,7 +258,7 @@ $action = $_GET['action'] ?? '';
                     $duration = $days . ' ' . ($days === 1 ? 'day' : 'days');
                 }
             ?>
-                <a href="trip_detail.php?id=<?php echo $trip['id']; ?>" class="trip-card" style="text-decoration: none; display: block;">
+                <a href="trip_detail.php?id=<?php echo $trip['id']; ?>" class="trip-card<?php echo $hasCoverImage ? ' has-cover' : ''; ?>"<?php if ($hasCoverImage): ?> style='--trip-cover-image: url(<?php echo htmlspecialchars(json_encode($coverImageUrl), ENT_QUOTES, 'UTF-8'); ?>);'<?php endif; ?>>
                     <div class="trip-card-content">
                         <div class="trip-card-header">
                             <div class="trip-card-title-section">
