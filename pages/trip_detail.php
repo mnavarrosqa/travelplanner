@@ -1137,6 +1137,12 @@ include __DIR__ . '/../includes/header.php';
                         <span>Edit Trip</span>
                     </a>
                 <?php endif; ?>
+                <?php if ($isOwner): ?>
+                    <button type="button" onclick="openCollaboratorsModal()" class="trip-action-item">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Collaborators</span>
+                    </button>
+                <?php endif; ?>
                 <a href="../api/export_trip.php?id=<?php echo $tripId; ?>&format=csv" class="trip-action-item">
                     <i class="fas fa-table"></i>
                     <span>Export as CSV</span>
@@ -5011,6 +5017,101 @@ async function removeCollaborator(userId) {
         customAlert('Error removing collaborator', 'Error');
         console.error(error);
     });
+}
+
+// Collaborators modal (invite registered users by email)
+function openCollaboratorsModal() {
+    const tripId = <?php echo (int)$tripId; ?>;
+    const collaborators = <?php echo json_encode($collaborators ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+    const ownerUserId = <?php echo (int)($trip['user_id'] ?? 0); ?>;
+
+    const collabRows = (Array.isArray(collaborators) ? collaborators : []).map(c => {
+        const name = [c.first_name || '', c.last_name || ''].join(' ').trim();
+        const displayName = name || c.email || 'User';
+        const role = (c.role || 'viewer');
+        const isOwner = (c.role === 'owner' || c.id === ownerUserId);
+        const removeBtn = (!isOwner && c.id)
+            ? `<button type="button" class="btn btn-secondary btn-small" onclick="removeCollaborator(${c.id})" style="margin: 0;">Remove</button>`
+            : `<span style="font-size: 0.85rem; color: var(--text-light);">Owner</span>`;
+
+        return `
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; padding:0.75rem; border:1px solid var(--border-color); border-radius:10px; background: rgba(255,255,255,0.6);">
+                <div style="min-width:0;">
+                    <div style="font-weight:600; color: var(--text-color); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(displayName)}</div>
+                    <div style="font-size:0.85rem; color: var(--text-light); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        ${escapeHtml(c.email || '')} · ${escapeHtml(role)}
+                    </div>
+                </div>
+                <div style="flex-shrink:0; display:flex; gap:0.5rem; align-items:center;">
+                    ${removeBtn}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    const modalBody = `
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+            <div>
+                <p style="margin:0 0 0.5rem 0; color: var(--text-color); font-weight:600;">Invite a registered user</p>
+                <form id="inviteUserForm" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-end;">
+                    <input type="hidden" name="trip_id" value="${tripId}">
+                    <div style="flex: 2; min-width: 220px;">
+                        <label class="form-label" for="invite_email" style="margin-bottom:0.25rem;">Email</label>
+                        <input id="invite_email" name="email" type="email" class="form-input" placeholder="user@email.com" required>
+                    </div>
+                    <div style="flex: 1; min-width: 160px;">
+                        <label class="form-label" for="invite_role" style="margin-bottom:0.25rem;">Role</label>
+                        <select id="invite_role" name="role" class="form-select">
+                            <option value="viewer" selected>Viewer</option>
+                            <option value="editor">Editor</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-small" style="margin:0; min-height:44px;">
+                        <i class="fas fa-user-plus"></i> Invite
+                    </button>
+                </form>
+                <div class="form-help" style="margin-top:0.5rem;">
+                    If the email is already registered, they’ll be added immediately. Otherwise, we’ll email them an invite link to create an account and accept.
+                </div>
+            </div>
+
+            <div>
+                <p style="margin:0 0 0.5rem 0; color: var(--text-color); font-weight:600;">Current collaborators</p>
+                <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                    ${collabRows || `<div style="color: var(--text-light); font-size:0.9rem;">No collaborators yet.</div>`}
+                </div>
+            </div>
+        </div>
+    `;
+
+    customModal.show('Collaborators', modalBody, 'dialog', {
+        html: true,
+        footer: `
+            <button type="button" class="btn btn-secondary" onclick="customModal.close(false)">Close</button>
+        `
+    });
+
+    // Attach submit handler after modal renders
+    setTimeout(() => {
+        const form = document.getElementById('inviteUserForm');
+        if (!form) return;
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            try {
+                const res = await fetch('../api/invite_registered_user.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    customAlert(data.message || 'Failed to invite user', 'Error');
+                }
+            } catch (err) {
+                console.error(err);
+                customAlert('Error inviting user. Please try again.', 'Error');
+            }
+        });
+    }, 0);
 }
 
 // Share Trip Functionality
