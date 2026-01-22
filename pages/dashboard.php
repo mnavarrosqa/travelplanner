@@ -7,6 +7,8 @@ require_once __DIR__ . '/../config/constants.php';
 
 $pageTitle = 'My Trips';
 $showBack = false;
+$includeCropper = true;
+$extraScripts = ['cover-cropper.js'];
 include __DIR__ . '/../includes/header.php';
 
 $conn = getDBConnection();
@@ -500,6 +502,13 @@ function removeDestination(button) {
 document.getElementById('tripForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
+
+    // Use cropped cover image if available
+    const coverInput = document.getElementById('cover_image');
+    const croppedCover = window.coverCropper?.getCroppedForInput(coverInput);
+    if (croppedCover?.blob) {
+        formData.set('cover_image', croppedCover.blob, croppedCover.filename || 'cover.jpg');
+    }
     
     // Handle destinations based on type
     const destinationType = document.querySelector('input[name="destination_type"]:checked').value;
@@ -547,6 +556,9 @@ document.getElementById('tripForm')?.addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            if (croppedCover?.blob) {
+                window.coverCropper?.clearForInput(coverInput);
+            }
             window.location.href = 'trip_detail.php?id=' + data.trip_id;
         } else {
             alert('Error: ' + data.message);

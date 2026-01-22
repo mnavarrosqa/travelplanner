@@ -369,6 +369,8 @@ if ($editItemId) {
 
 $pageTitle = htmlspecialchars($trip['title']);
 $showBack = true;
+$includeCropper = true;
+$extraScripts = ['cover-cropper.js', 'reservation-pdf-autofill.js'];
 $action = $_GET['action'] ?? '';
 
 // Get invitations if owner
@@ -1359,7 +1361,7 @@ include __DIR__ . '/../includes/header.php';
                         ];
                         $typeIcon = $typeIcons[$nextItemData['type']] ?? 'fa-circle';
                         ?>
-                        <div class="trip-header-next-item">
+                        <a href="#item-<?php echo $nextItemData['id']; ?>" class="trip-header-next-item" onclick="event.preventDefault(); scrollToItem(<?php echo $nextItemData['id']; ?>); return false;" style="text-decoration: none; display: block; cursor: pointer;">
                             <div class="next-item-header">
                                 <i class="fas fa-clock"></i>
                                 <span>Next: <?php echo htmlspecialchars($nextItemData['title']); ?></span>
@@ -1374,7 +1376,7 @@ include __DIR__ . '/../includes/header.php';
                                     <span class="next-item-time-until"><?php echo $timeUntil; ?></span>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1434,18 +1436,85 @@ include __DIR__ . '/../includes/header.php';
                     $dominantType = count($typeCounts) > 1 ? 'mixed' : key($typeCounts);
                     $allTypes = array_keys($typeCounts);
                     $typesClass = implode(' ', array_map(function($type) { return 'has-type-' . $type; }, $allTypes));
+                    
+                    // Generate dynamic gradient for mixed types
+                    $typeColors = [
+                        'flight' => ['#5DADE2', '#3498DB'],
+                        'train' => ['#E67E22', '#D35400'],
+                        'bus' => ['#9B59B6', '#7D3C98'],
+                        'hotel' => ['#8B4513', '#654321'],
+                        'car_rental' => ['#16A085', '#138D75'],
+                        'activity' => ['#50C878', '#27AE60'],
+                        'other' => ['#95A5A6', '#7F8C8D']
+                    ];
+                    
+                    $dotColor = '#95A5A6';
+                    $gradientStyle = '';
+                    if ($dominantType === 'mixed' && count($allTypes) > 1) {
+                        // Create smooth gradient from actual types present
+                        // Sort types for consistent ordering
+                        $typeOrder = ['flight', 'train', 'bus', 'hotel', 'car_rental', 'activity', 'other'];
+                        $sortedTypes = [];
+                        foreach ($typeOrder as $orderedType) {
+                            if (in_array($orderedType, $allTypes)) {
+                                $sortedTypes[] = $orderedType;
+                            }
+                        }
+                        // Add any remaining types not in the order
+                        foreach ($allTypes as $type) {
+                            if (!in_array($type, $sortedTypes)) {
+                                $sortedTypes[] = $type;
+                            }
+                        }
+                        
+                        $gradientStops = [];
+                        $numTypes = count($sortedTypes);
+                        
+                        if ($numTypes === 2) {
+                            // Two types: smooth transition
+                            $gradientStops[] = ($typeColors[$sortedTypes[0]][0] ?? $typeColors['other'][0]) . ' 0%';
+                            $gradientStops[] = ($typeColors[$sortedTypes[0]][0] ?? $typeColors['other'][0]) . ' 50%';
+                            $gradientStops[] = ($typeColors[$sortedTypes[1]][0] ?? $typeColors['other'][0]) . ' 50%';
+                            $gradientStops[] = ($typeColors[$sortedTypes[1]][0] ?? $typeColors['other'][0]) . ' 100%';
+                        } else {
+                            // Multiple types: evenly distributed with smooth transitions
+                            foreach ($sortedTypes as $index => $type) {
+                                $color = $typeColors[$type][0] ?? $typeColors['other'][0];
+                                if ($numTypes === 1) {
+                                    $gradientStops[] = $color . ' 0%, ' . $color . ' 100%';
+                                } else {
+                                    $startPercent = round(($index / $numTypes) * 100);
+                                    $endPercent = round((($index + 1) / $numTypes) * 100);
+                                    if ($index === 0) {
+                                        $gradientStops[] = $color . ' ' . $startPercent . '%';
+                                    }
+                                    $gradientStops[] = $color . ' ' . $endPercent . '%';
+                                }
+                            }
+                        }
+                        
+                        $gradientStyle = 'background: linear-gradient(135deg, ' . implode(', ', $gradientStops) . ');';
+                        
+                        // Use first type's color for dot
+                        $dotColor = $typeColors[$sortedTypes[0]][0] ?? '#95A5A6';
+                    } elseif ($dominantType !== 'mixed') {
+                        // Single type - use its gradient
+                        $colors = $typeColors[$dominantType] ?? $typeColors['other'];
+                        $gradientStyle = 'background: linear-gradient(135deg, ' . $colors[0] . ', ' . $colors[1] . ');';
+                        $dotColor = $colors[0];
+                    }
                     ?>
                     <div class="timeline-date-group <?php echo $typesClass; ?>" data-date="<?php echo $itemDate; ?>" data-dominant-type="<?php echo $dominantType; ?>">
                         <div class="timeline-date-header expandable-header timeline-date-header-<?php echo $dominantType; ?>" data-date="<?php echo $itemDate; ?>">
-                            <div class="timeline-date-dot timeline-date-dot-<?php echo $dominantType; ?>" style="position: absolute; left: -1.5rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--card-bg); box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index: 3;"></div>
-                            <div class="timeline-date-header-content timeline-date-header-content-<?php echo $dominantType; ?>" style="display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer; padding: 0.6rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; line-height: 1.3; touch-action: manipulation; -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3); min-height: 44px; color: white;">
+                            <div class="timeline-date-dot timeline-date-dot-<?php echo $dominantType; ?>" style="position: absolute; left: -1.5rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--card-bg); box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index: 3; background: <?php echo $dotColor; ?>;"></div>
+                            <div class="timeline-date-header-content timeline-date-header-content-<?php echo $dominantType; ?>" style="<?php echo $gradientStyle; ?> display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer; padding: 0.6rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; line-height: 1.3; touch-action: manipulation; -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3); min-height: 44px; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
                                 <span><?php echo date('l, F j, Y', strtotime($itemDate)); ?></span>
                                 <i class="fas fa-chevron-down expand-icon" style="font-size: 1rem; transition: transform 0.3s ease; pointer-events: none;"></i>
                                 <span class="item-count" style="margin-left: 0.5rem; font-size: 0.8rem; opacity: 0.9; pointer-events: none;">(<?php echo count($dateItems); ?>)</span>
                             </div>
                         </div>
                         <div class="timeline-date-content" data-date="<?php echo $itemDate; ?>" style="display: block;">
-                            <?php foreach ($dateItems as $item): ?>
+                            <?php foreach ($dateItems as $itemIndex => $item): ?>
                                 <?php
                                 // Prepare searchable data attributes
                                 $searchData = [
@@ -1461,8 +1530,10 @@ include __DIR__ . '/../includes/header.php';
                                     'arrival_icao' => strtolower(($item['flight_arrival_icao'] ?? '') ?: ''),
                                 ];
                                 $searchText = implode(' ', array_filter($searchData));
+                                // Add variant class for items on the same day (0-indexed)
+                                $variantClass = 'item-variant-' . ($itemIndex % 6); // Cycle through 6 variants
                                 ?>
-                                <div class="timeline-item-wrapper expandable-item <?php echo htmlspecialchars($item['type']); ?>" 
+                                <div class="timeline-item-wrapper expandable-item <?php echo htmlspecialchars($item['type']); ?> <?php echo $variantClass; ?>" 
                                      data-item-id="<?php echo $item['id']; ?>" 
                                      data-item-title="<?php echo htmlspecialchars($searchData['title']); ?>" 
                                      data-item-location="<?php echo htmlspecialchars($searchData['location']); ?>"
@@ -1572,7 +1643,7 @@ include __DIR__ . '/../includes/header.php';
                                     </div>
                                     
                                     <!-- Expanded Full Details View -->
-                                    <div class="timeline-item <?php echo $item['type']; ?> timeline-item-details" data-item-id="<?php echo $item['id']; ?>" style="display: none; padding: 1rem; background: var(--card-bg); border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-top: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                                    <div class="timeline-item <?php echo $item['type']; ?> <?php echo $variantClass; ?> timeline-item-details" data-item-id="<?php echo $item['id']; ?>" style="display: none; padding: 1rem; background: var(--card-bg); border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-top: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
                                         <div class="timeline-date" style="margin-bottom: 0.75rem;">
                                             <?php if ($item['type'] === 'flight' && isset($item['departure_timezone']) && $item['departure_timezone']): ?>
                                                 <?php 
@@ -1971,6 +2042,8 @@ const customModal = {
     footer: null,
     closeBtn: null,
     resolve: null,
+    closeTimer: null,
+    closeToken: 0,
     
     init() {
         this.modal = document.getElementById('customModal');
@@ -2012,6 +2085,13 @@ const customModal = {
             if (!this.modal) {
                 this.init();
             }
+
+            // If a previous close animation is pending, cancel it.
+            if (this.closeTimer) {
+                clearTimeout(this.closeTimer);
+                this.closeTimer = null;
+            }
+            this.closeToken++;
             
             // Set title
             if (this.title) {
@@ -2091,11 +2171,18 @@ const customModal = {
     close(shouldResolve = true) {
         if (this.modal) {
             this.modal.classList.remove('show');
-            setTimeout(() => {
-                if (this.modal) {
+            const token = ++this.closeToken;
+            if (this.closeTimer) {
+                clearTimeout(this.closeTimer);
+                this.closeTimer = null;
+            }
+            this.closeTimer = setTimeout(() => {
+                // Only hide if we haven't shown another modal since.
+                if (this.closeToken === token && this.modal && !this.modal.classList.contains('show')) {
                     this.modal.style.display = 'none';
+                    document.body.style.overflow = '';
                 }
-                document.body.style.overflow = '';
+                this.closeTimer = null;
             }, 300);
         }
         if (shouldResolve && this.resolve) {
@@ -2107,6 +2194,9 @@ const customModal = {
         }
     }
 };
+
+// Expose modal API globally (used by reservation PDF auto-fill UI)
+window.customModal = customModal;
 
 // Custom Alert function - Make available globally immediately
 window.customAlert = function(message, title = 'Alert') {
@@ -2196,6 +2286,13 @@ function removeEditDestination(button) {
 document.getElementById('editTripForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
+
+    // Use cropped cover image if available
+    const coverInput = document.getElementById('cover_image');
+    const croppedCover = window.coverCropper?.getCroppedForInput(coverInput);
+    if (croppedCover?.blob) {
+        formData.set('cover_image', croppedCover.blob, croppedCover.filename || 'cover.jpg');
+    }
     
     // Handle destinations based on type
     const destinationType = document.querySelector('input[name="edit_destination_type"]:checked')?.value;
@@ -2244,6 +2341,9 @@ document.getElementById('editTripForm')?.addEventListener('submit', function(e) 
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            if (croppedCover?.blob) {
+                window.coverCropper?.clearForInput(coverInput);
+            }
             window.location.href = 'trip_detail.php?id=<?php echo $tripId; ?>';
         } else {
             customAlert(data.message, 'Error');
@@ -4798,6 +4898,33 @@ document.querySelectorAll('.expandable-header').forEach(header => {
     }
 });
 
+// Scroll to item function for "Next" section
+function scrollToItem(itemId) {
+    const itemWrapper = document.querySelector(`.timeline-item-wrapper[data-item-id="${itemId}"]`);
+    if (itemWrapper) {
+        // Expand the item if it's collapsed
+        const details = document.querySelector(`.timeline-item-details[data-item-id="${itemId}"]`);
+        const header = itemWrapper.querySelector('.expandable-item-header');
+        if (details && details.style.display === 'none' && header) {
+            details.style.display = 'block';
+            const icon = header.querySelector('.expand-item-icon');
+            if (icon) {
+                icon.className = 'fas fa-chevron-down expand-item-icon';
+            }
+        }
+        
+        // Scroll to the item with smooth behavior
+        itemWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Add a highlight effect
+        itemWrapper.style.transition = 'box-shadow 0.3s ease';
+        itemWrapper.style.boxShadow = '0 0 0 3px rgba(74, 144, 226, 0.3)';
+        setTimeout(() => {
+            itemWrapper.style.boxShadow = '';
+        }, 2000);
+    }
+}
+
 // Expandable item details - support both click and touch events
 document.querySelectorAll('.expandable-item-header').forEach(header => {
     function handleToggle(e) {
@@ -5522,6 +5649,13 @@ document.addEventListener('DOMContentLoaded', function() {
     position: relative;
 }
 </style>
+
+<!-- PDF.js (client-side PDF text extraction for reservation auto-fill) -->
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+// Used by assets/js/reservation-pdf-autofill.js to configure PDF.js worker.
+window.__PDFJS_WORKER_SRC__ = '<?php echo htmlspecialchars($basePath ? $basePath . '/' : '/'); ?>assets/vendor/pdfjs/pdf.worker.min.js';
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 

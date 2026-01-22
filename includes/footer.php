@@ -66,6 +66,9 @@
     <?php if (isset($pageTitle) && strpos($pageTitle, 'Trip') !== false): ?>
         <script src="<?php echo htmlspecialchars($basePath ? $basePath . '/' : '/'); ?>assets/js/timeline.js"></script>
     <?php endif; ?>
+    <?php if (!empty($includeCropper)): ?>
+        <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <?php endif; ?>
     <?php if (isset($extraScripts)): ?>
         <?php foreach ($extraScripts as $script): ?>
             <script src="<?php echo htmlspecialchars($basePath ? $basePath . '/' : '/'); ?>assets/js/<?php echo htmlspecialchars($script); ?>"></script>

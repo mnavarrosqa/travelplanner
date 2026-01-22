@@ -61,6 +61,9 @@ $currentUser = getCurrentUser();
     <link rel="stylesheet" href="<?php echo htmlspecialchars($basePath ? $basePath . '/' : '/'); ?>assets/css/style.css">
     <link rel="stylesheet" href="<?php echo htmlspecialchars($basePath ? $basePath . '/' : '/'); ?>assets/css/header-improvements.css">
     <link rel="stylesheet" href="<?php echo htmlspecialchars($basePath ? $basePath . '/' : '/'); ?>assets/css/status_badges.css">
+    <?php if (!empty($includeCropper)): ?>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <?php endif; ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
